@@ -16,7 +16,7 @@ $ket_laporan = 1;
 $result = mysqli_query($conn, "UPDATE tb_laundry SET `status_pembayaran` = 1 WHERE id_laundry = '$id'");
 
 // jika lunas maka tambah data ke tb_pemasukan
-$result2 = mysqli_query($conn, "INSERT INTO `tb_laporan` (`id_laporan`, `tgl_laporan`, `ket_laporan`, `catatan`, `id_laundry`, `pemasukan`) VALUES ('', '$tgl', '$ket_laporan', '$catatan', '$id', '$pemasukan')");
+$result2 = mysqli_query($conn, "INSERT INTO `tb_laporan` (`tgl_laporan`, `ket_laporan`, `catatan`, `id_laundry`, `pemasukan`, `pengeluaran`) VALUES ('$tgl', '$ket_laporan', '$catatan', '$id', '$pemasukan', 0)");
 
 if ($result && $result2) {
   echo "

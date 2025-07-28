@@ -1,5 +1,7 @@
 <?php
 
+use Spatie\Browsershot\Browsershot;
+
 // jika tombol tambah ditekan
 if (isset($_POST['tambah'])) {
   $idlaundry = $_POST['id_laundry'];
@@ -17,38 +19,38 @@ if (isset($_POST['tambah'])) {
   $ket_laporan = 1;
   $pesan_error = "";
 
-  // input ke tb transaksi
-  $query = "INSERT INTO `tb_laundry` (`id_laundry`, `pelangganid`, `userid`, `kd_jenis`, `tgl_terima`, `tgl_selesai`, `jml_kilo`, `catatan`, `totalbayar`, `status_pembayaran`,`status_pengambilan`) VALUES ('$idlaundry', '$pelangganid', '$userid', '$jenis', '$tgl_terima', '$tgl_selesai', '$jml_kilo', '$catatan', '$totalbayar', '$status','$status_pengambilan')";
-  $result = mysqli_query($conn, $query);
+  // cek duplikasi id_laundry
+  $cek_id = mysqli_query($conn, "SELECT id_laundry FROM tb_laundry WHERE id_laundry = '$idlaundry'");
+  if (mysqli_num_rows($cek_id) > 0) {
+    $pesan_error .= "ID Laundry $idlaundry sudah digunakan, silakan coba lagi.";
+  } else {
+    // input ke tb transaksi
+    $query = "INSERT INTO `tb_laundry` (`id_laundry`, `pelangganid`, `userid`, `kd_jenis`, `tgl_terima`, `tgl_selesai`, `jml_kilo`, `catatan`, `totalbayar`, `status_pembayaran`,`status_pengambilan`) VALUES ('$idlaundry', '$pelangganid', '$userid', '$jenis', '$tgl_terima', '$tgl_selesai', '$jml_kilo', '$catatan', '$totalbayar', '$status','$status_pengambilan')";
+    $result = mysqli_query($conn, $query);
 
-  // jika sudah lunas, maka input data transaksi ke tb_laporan
-  if ($status == 1) {
-    mysqli_query($conn, "INSERT INTO `tb_laporan` (`id_laporan`, `tgl_laporan`, `ket_laporan`, `catatan`, `id_laundry`, `pemasukan`) VALUES ('', '$tgl_terima', '$ket_laporan', '$catatan', '$idlaundry', '$totalbayar')");
-  }
-  
-  if ($result) {
-    echo "
-      <script>
-        alert('Transaksi $idlaundry berhasil ditambahkan');
-        window.location.href = '?page=laundry';
-      </script>
-    ";
-  }else{
+    // jika sudah lunas, maka input data transaksi ke tb_laporan
+    if ($status == 1) {
+      mysqli_query($conn, "INSERT INTO `tb_laporan` (`tgl_laporan`, `ket_laporan`, `catatan`, `id_laundry`, `pemasukan`, `pengeluaran`) VALUES ('$tgl_terima', '$ket_laporan', '$catatan', '$idlaundry', '$totalbayar', 0)");
+    }
+    
+      require_once __DIR__ . '/../../vendor/autoload.php';
+
+      $invoiceUrl = "http://localhost/Berbaju-laundry/page/laundry/invoice.php?id_laundry=$idlaundry";
+      $outputPath = __DIR__ . "/../../invoice_img/invoice_$idlaundry.png";
+      Browsershot::url($invoiceUrl)
+        ->setOption('landscape', true)
+        ->save($outputPath);
+
+      echo "
+        <script>
+          alert('Transaksi $idlaundry berhasil ditambahkan dan invoice tersimpan!');
+          window.location.href = '?page=laundry';
+        </script>
+      ";
+    }
+  } else {
     $pesan_error .= "Data gagal disimpan !";
   }
-
-}else{
-  $pesan_error = "";
-  $pelangganid = "";
-  $jenis = "";
-  $tarif = "";
-  $tgl_selesai = "";
-  $jml_kilo = "";
-  $totalbayar = "";
-  $catatan = "";
-  $status = "";
-}
-
 ?>
 
 <div class="page-content-wrapper">
