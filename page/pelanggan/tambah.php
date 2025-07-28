@@ -7,6 +7,14 @@ if (isset($_POST['tambah'])) {
   $jk = htmlentities(strip_tags(trim($_POST["jk"])));
   $alamat = htmlentities(strip_tags(trim($_POST["alamat"])));
   $pelanggantelp = htmlentities(strip_tags(trim($_POST["pelanggantelp"])));
+
+  // Jika nomor diawali 0, ubah ke +62
+  if (substr($pelanggantelp, 0, 1) == '0') {
+    $pelanggantelp = '+62' . substr($pelanggantelp, 1);
+  } elseif (substr($pelanggantelp, 0, 3) != '+62') {
+    $pelanggantelp = '+62' . $pelanggantelp;
+  }
+
   $pesan_error = "";
 
   // input data ke db
@@ -98,9 +106,9 @@ if (isset($_POST['tambah'])) {
               </div>
 
               <div class="form-group row">
-                <label for="example-text-input" class="col-sm-2 col-form-label">Telp</label>
+                <label for="example-text-input" class="col-sm-2 col-form-label">WhatsApp</label>
                 <div class="col-sm-10">
-                  <input class="form-control" type="number"id="example-text-input" name="pelanggantelp" placeholder="Masukkan No.Telp" value="<?= $usertelp; ?>" required/>
+                  <input class="form-control" type="number"id="example-text-input" name="pelanggantelp" placeholder="Masukkan Nomor WhatsApp" value="<?= $usertelp; ?>" required/>
                 </div>
               </div>
 
