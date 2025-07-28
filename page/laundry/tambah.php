@@ -34,13 +34,9 @@ if (isset($_POST['tambah'])) {
       mysqli_query($conn, "INSERT INTO `tb_laporan` (`tgl_laporan`, `ket_laporan`, `catatan`, `id_laundry`, `pemasukan`, `pengeluaran`) VALUES ('$tgl_terima', '$ket_laporan', '$catatan', '$idlaundry', '$totalbayar', 0)");
     }
     
-      require_once __DIR__ . '/../../vendor/autoload.php';
-
       $invoiceUrl = "http://localhost/Berbaju-laundry/page/laundry/invoice.php?id_laundry=$idlaundry";
-      $outputPath = __DIR__ . "/../../invoice_img/invoice_$idlaundry.png";
-      Browsershot::url($invoiceUrl)
-        ->setOption('landscape', true)
-        ->save($outputPath);
+
+      require_once __DIR__ . '/../../vendor/autoload.php';
 
       // Generate invoice image ke file sementara
       $tempPath = sys_get_temp_dir() . "/invoice_$idlaundry.png";
