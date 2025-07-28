@@ -1,6 +1,7 @@
 <?php
 
 use Spatie\Browsershot\Browsershot;
+use Google\Cloud\Storage\StorageClient;
 
 // jika tombol tambah ditekan
 if (isset($_POST['tambah'])) {
@@ -40,6 +41,34 @@ if (isset($_POST['tambah'])) {
       Browsershot::url($invoiceUrl)
         ->setOption('landscape', true)
         ->save($outputPath);
+
+      // Generate invoice image ke file sementara
+      $tempPath = sys_get_temp_dir() . "/invoice_$idlaundry.png";
+      Browsershot::url($invoiceUrl)
+        ->setOption('landscape', true)
+        ->save($tempPath);
+
+      // Upload ke Google Cloud Storage
+      $storage = new StorageClient([
+          'keyFilePath' => __DIR__ . '/../../calocare-eec8fdc4a3f0.json', // path ke file credentials
+      ]);
+      $bucketName = 'singgah'; // ganti dengan nama bucket GCS kamu
+      $bucket = $storage->bucket($bucketName);
+
+      // Nama file di GCS
+      $gcsFileName = "invoice_$idlaundry.png";
+
+      // Upload file
+      $bucket->upload(
+          fopen($tempPath, 'r'),
+          ['name' => $gcsFileName]
+      );
+
+      // Hapus file lokal jika perlu
+      unlink($tempPath);
+
+      // URL publik GCS
+      $publicUrl = "https://storage.googleapis.com/$bucketName/$gcsFileName";
 
       echo "
         <script>
