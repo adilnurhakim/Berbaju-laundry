@@ -1,5 +1,6 @@
 {
     "require": {
-        "spatie/browsershot": "^3.61"
+        "spatie/browsershot": "^3.61",
+        "google/cloud-storage": "^1.48"
     }
 }
