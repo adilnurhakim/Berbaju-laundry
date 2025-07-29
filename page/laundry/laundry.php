@@ -76,18 +76,13 @@
                   <td>
                     <!-- jika status pembayaran = 1 -->
                     <?php if($row['status_pembayaran'] == 1) { ?>
-                      
                       <a href="?page=laundry&aksi=detail&id=<?= $row['id_laundry']; ?>" class="btn btn-primary mb-2"><i class="fa fa-eye"></i> Detail</a>
-
-                      <a href="page/cetak_transaksi.php?id=<?= $row['id_laundry']; ?>" class="btn btn-success" target="_blank"><i class="fa fa-download"> Cetak</i></></a>
-
-                    <!-- jika status pembayaran = 0 -->
+                      <a href="page/cetak_transaksi.php?id=<?= $row['id_laundry']; ?>" class="btn btn-success" target="_blank"><i class="fa fa-download"> Cetak</i></a>
+                      <button class="btn btn-info mb-2 btn-kirim-wa" data-id="<?= $row['id_laundry']; ?>"><i class="fa fa-whatsapp"></i> WhatsApp</button>
                     <?php }elseif($row['status_pembayaran'] == 0){ ?>
-
                       <a href="?page=laundry&aksi=detail&id=<?= $row['id_laundry']; ?>" class="btn btn-primary mb-2"><i class="fa fa-eye"></i> Detail</a>
                       <a href="?page=laundry&aksi=lunasi&id=<?= $row['id_laundry']; ?>" class="btn btn-success mb-2" onclick="return confirm('Apakah anda yakin transaksi laundry sudah lunas ?');"><i class="fa fa-money"></i> Lunasi</a>
                       <a href="?page=laundry&aksi=hapus&id=<?= $row['id_laundry']; ?>" class="btn btn-danger" onclick="return confirm('Apakah anda yakin untuk menghapus ?');"><i class="fa fa-trash-o"></i> Hapus</a>
-                    
                     <?php } ?>
                   </td>
                 </tr>
@@ -106,3 +101,35 @@
   </div>
   <!-- container -->
 </div>
+
+<script>
+$(document).ready(function() {
+    $('#datatable').on('click', '.btn-kirim-wa', function() {
+        var idLaundry = $(this).data('id');
+        var btn = $(this);
+
+        if (confirm('Anda yakin ingin mengirim invoice via WhatsApp ke pelanggan?')) {
+            btn.html('<i class="fa fa-spinner fa-spin"></i> Mengirim...').prop('disabled', true);
+
+            $.ajax({
+                url: 'page/laundry/kirim_wa.php',
+                type: 'GET',
+                data: { id_laundry: idLaundry },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                    } else {
+                        alert('Gagal: ' + response.message + (response.error_location ? '\nLokasi: ' + response.error_location : ''));
+                    }
+                    btn.html('<i class="fa fa-whatsapp"></i> WhatsApp').prop('disabled', false);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    alert('Terjadi kesalahan AJAX: ' + textStatus + '\n' + jqXHR.responseText);
+                    btn.html('<i class="fa fa-whatsapp"></i> WhatsApp').prop('disabled', false);
+                }
+            });
+        }
+    });
+});
+</script>
