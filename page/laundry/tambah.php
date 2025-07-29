@@ -66,12 +66,50 @@ if (isset($_POST['tambah'])) {
       // URL publik GCS
       $publicUrl = "https://storage.googleapis.com/$bucketName/$gcsFileName";
 
-      echo "
-        <script>
-          alert('Transaksi $idlaundry berhasil ditambahkan dan invoice tersimpan!');
-          window.location.href = '?page=laundry';
-        </script>
-      ";
+      // Kirim WhatsApp ke pelanggan
+      // Ambil data pelanggan dan nomor WA
+      $query_pelanggan = mysqli_query($conn, "SELECT l.*, p.pelanggannama, p.pelanggantelp, j.jenis_laundry FROM tb_laundry l JOIN tb_pelanggan p ON l.pelangganid = p.pelangganid JOIN tb_jenis j ON l.kd_jenis = j.kd_jenis WHERE l.id_laundry = '$idlaundry'");
+      $data = mysqli_fetch_assoc($query_pelanggan);
+      $wa_number = $data['pelanggantelp'];
+      // Nomor sudah +62 dari database
+
+      $pesan = "Halo {$data['pelanggannama']},\nTransaksi Laundry Anda:\nID: {$data['id_laundry']}\nJenis: {$data['jenis_laundry']}\nJumlah: {$data['jml_kilo']} Kg\nTotal: Rp " . number_format($data['totalbayar'],0,',','.') . "\nTerima kasih.";
+      $image_url = $publicUrl;
+
+      $api_url = "https://api.sidobe.com/wa/v1/send-message-image";
+      $secret_key = "odhRvxRmfcWcOJJjYgVAoaMmcJLpRbGUhOWirteCOCWsZjclAh";
+      $payload = [
+        "phone" => $wa_number,
+        "message" => $pesan,
+        "image_url" => $image_url
+      ];
+      $ch = curl_init($api_url);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "X-Secret-Key: $secret_key",
+        "Content-Type: application/json"
+      ]);
+      curl_setopt($ch, CURLOPT_POST, 1);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      $response = curl_exec($ch);
+      $curl_error = curl_error($ch);
+      $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+      curl_close($ch);
+
+      $notif = '';
+      if ($curl_error) {
+        $notif = 'Transaksi $idlaundry berhasil ditambahkan dan invoice tersimpan!\nGagal menghubungi API WhatsApp: ' . $curl_error . ' (cURL Error)';
+      } else {
+        $api_result = json_decode($response, true);
+        if ($http_code != 200 || (isset($api_result['status']) && $api_result['status'] != 'success')) {
+          $error_msg = isset($api_result['message']) ? $api_result['message'] : 'HTTP Code: ' . $http_code;
+          $notif = 'Transaksi $idlaundry berhasil ditambahkan dan invoice tersimpan!\nAPI WhatsApp gagal: ' . $error_msg . ' (API Response)';
+        } else {
+          $notif = 'Transaksi $idlaundry berhasil ditambahkan, invoice tersimpan, dan WhatsApp berhasil dikirim!';
+        }
+      }
+
+      echo "<script>alert('$notif');window.location.href='?page=laundry';</script>";
     }
   } else {
     $pesan_error .= "Data gagal disimpan !";
